@@ -5,6 +5,11 @@
   tags:
     - install
 
+- name: REDIS_EXPORTER | Role Variables
+  include: set-role-variables.yml
+  tags:
+    - configure
+
 - name: REDIS_EXPORTER | Configure
   include: config.yml
   tags:

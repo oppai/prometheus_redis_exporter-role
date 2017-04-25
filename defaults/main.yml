@@ -22,6 +22,8 @@ redis_exporter_log_path: /var/log/redis_exporter
 redis_exporter_log_file: "redis_exporter.log"
 redis_exporter_root_path: /opt/redis_exporter
 redis_exporter_bin_path: "{{ redis_exporter_root_path }}/bin"
+redis_exporter_pid_path: /run/redis_exporter
+redis_exporter_pid_file: redis_exporter.pid
 
 # Flags (https://github.com/oliver006/redis_exporter#flags)
 redis_exporter_port: 9121

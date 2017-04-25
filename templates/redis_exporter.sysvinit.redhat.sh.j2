@@ -1,0 +1,114 @@
+#!/bin/bash
+
+### BEGIN INIT INFO
+# processname:       redis_exporter
+# Short-Description: Exporter for Redis metrics.
+# Description:       Prometheus exporter for Redis metrics, written in Go.
+#
+# chkconfig: 2345 80 80
+# pidfile: {{ redis_exporter_pid_path }}/{{ redis_exporter_pid_file }}
+#
+#
+### END INIT INFO
+
+#set -e
+
+# Source function library.
+. /etc/init.d/functions
+
+
+NAME=redis_exporter
+DESC="Prometheus Exporter for Redis metrics"
+DAEMON={{ redis_exporter_bin_path }}/redis_exporter
+USER={{ redis_exporter_user }}
+CONFIG=
+PID="{{ redis_exporter_pid_path }}/{{ redis_exporter_pid_file }}"
+LOG="{{ redis_exporter_log_path }}/{{ redis_exporter_log_file }}"
+GOSU=/usr/local/bin/gosu
+
+{% if redis_exporter_options is defined %}
+DAEMON_OPTS="{{ redis_exporter_options }}"
+{% else %}
+DAEMON_OPTS=
+{% endif %}
+
+
+RETVAL=0
+
+
+# Check if DAEMON binary exist
+[ -f $DAEMON ] || exit 0
+
+{% if redis_exporter_redis_addr is defined %}
+export REDIS_ADDR='{{ redis_exporter_redis_addr  }}'
+{% endif %}
+
+{% if redis_exporter_redis_password is defined %}
+export REDIS_PASSWORD='{{ redis_exporter_redis_password }}'
+{% endif %}
+
+{% if redis_exporter_redis_alias is defined %}
+export REDIS_ALIAS='{{ redis_exporter_redis_alias }}'
+{% endif %}
+
+service_checks() {
+  # Prepare directories
+  mkdir -p "{{ redis_exporter_pid_path }}" "{{ redis_exporter_log_path }}"
+  chown -R $USER "{{ redis_exporter_pid_path }}" "{{ redis_exporter_log_path }}"
+
+  # Check if PID exists
+  if [ -f "$PID" ]; then
+    PID_NUMBER=`cat $PID`
+    if [ -z "`ps axf | grep ${PID_NUMBER} | grep -v grep`" ]; then
+      echo "Service was aborted abnormally; clean the PID file and continue..."
+      rm -f "$PID"
+    else
+      echo "Service already started; skip..."
+      exit 1
+    fi
+  fi
+}
+
+start() {
+  service_checks $1
+  $GOSU $USER   $DAEMON $DAEMON_OPTS  > $LOG 2>&1  &
+  RETVAL=$?
+  echo $! > $PID
+}
+
+stop() {
+  killproc -p $PID -b $DAEMON  $NAME
+  RETVAL=$?
+}
+
+case "$1" in
+  start)
+    echo -n $"Starting $DESC -" "$NAME" $'\n'
+    start
+    ;;
+
+  stop)
+    echo -n $"Stopping $DESC -" "$NAME" $'\n'
+    stop
+    ;;
+
+  restart)
+    echo -n $"Restarting $DESC -" "$NAME" $'\n'
+    stop
+    start
+    ;;
+
+  syntax)
+    $DAEMON --help
+    ;;
+
+  status)
+    status -p $PID $DAEMON
+    ;;
+
+  *)
+    echo -n $"Usage: /etc/init.d/$NAME {start|stop|restart|syntax|status}" $'\n'
+    ;;
+esac
+
+exit $RETVAL
