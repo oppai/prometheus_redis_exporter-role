@@ -1,4 +1,7 @@
 ---
+- name: REDIS_EXPORTER | Install gosu
+  include: install-gosu.yml
+
 - name: REDIS_EXPORTER | Ensure redis_exporter group
   group:
     name: "{{ redis_exporter_group }}"

@@ -8,6 +8,9 @@ redis_exporter_force_reinstall: false
 
 ## Service options
 
+# gosu
+gosu_version: '1.10'
+
 # Owner
 redis_exporter_user: prometheus
 redis_exporter_group: prometheus
