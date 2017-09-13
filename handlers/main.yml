@@ -4,4 +4,4 @@
   systemd:
     name: redis_exporter
     state: restarted
-  when: redis_exporter_service_state != 'stopped'
+  when: prometheus_redis_exporter_use_systemd and redis_exporter_service_state != 'stopped'
